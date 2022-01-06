@@ -69,7 +69,7 @@ a.requires_grad = True
 # A chaque itération, affichez la valeur de a et de l'erreur totale
 epochs = 50
 pas = 4e-4
-hist = {"loss":[],"a":[]}
+hist = {"loss":[],"a":[],"epochs":[]}
 
 def model(x,y):
   preds = torch.ones((x.shape[0],2))
@@ -81,16 +81,17 @@ def error(preds,true):
   err = torch.sum(torch.abs(preds-true))
   return err
 
-def plot_hist(hist, epochs):
-  fig, axs = plt.subplots(1, len(hist))
-  e = np.arange(epochs)
+def plot_hist(hist):
+  fig, axs = plt.subplots(1, len(hist)-1)
   for i, key in enumerate(hist):
-    axs[i].plot(e, hist[key])
-    axs[i].set_title(key)
-    axs[i].set_xlabel('epoch', fontsize=12)
+    if key!="epochs":
+        axs[i].plot(hist["epochs"], hist[key])
+        axs[i].set_title(key)
+        axs[i].set_xlabel('epochs', fontsize=12)
   plt.show() 
 
 for i in range(epochs):
+  hist["epochs"].append(i)
   # Generate Prediction
   preds = model(x,y)
   # Get the loss and perform backpropagation
@@ -104,4 +105,4 @@ for i in range(epochs):
     # Set the gradients to zero
     a.grad.zero_()
     print(f"Epoch {i}/{epochs}: Loss: {loss} a: {a[0]}")
-plot_hist(hist, epochs)
+plot_hist(hist)
