@@ -1,4 +1,6 @@
 import torch
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Comment installer Pytorch : https://pytorch.org/get-started/locally/
 
@@ -29,6 +31,8 @@ import torch
 # nous utilisons la syntaxe suivante :
 
 x = torch.FloatTensor([ 4,  6,  1 , 3 ])
+y = torch.FloatTensor([ 2,  -3,  1 , 3 ])
+true = torch.FloatTensor([0, 0, 1, 1])
 
 # pour créer notre paramètre d'apprentissage et préciser que pytorch
 # devra gérer son calcul de gradient, nous écrivons :
@@ -63,3 +67,41 @@ a.requires_grad = True
 
 
 # A chaque itération, affichez la valeur de a et de l'erreur totale
+epochs = 50
+pas = 4e-4
+hist = {"loss":[],"a":[]}
+
+def model(x,y):
+  preds = torch.ones((x.shape[0],2))
+  preds[:,0] = a*torch.abs(x-y)
+  preds = torch.min(preds, 1).values
+  return preds
+
+def error(preds,true):
+  err = torch.sum(torch.abs(preds-true))
+  return err
+
+def plot_hist(hist, epochs):
+  fig, axs = plt.subplots(1, len(hist))
+  e = np.arange(epochs)
+  for i, key in enumerate(hist):
+    axs[i].plot(e, hist[key])
+    axs[i].set_title(key)
+    axs[i].set_xlabel('epoch', fontsize=12)
+  plt.show() 
+
+for i in range(epochs):
+  # Generate Prediction
+  preds = model(x,y)
+  # Get the loss and perform backpropagation
+  loss = error(preds, true)
+  hist["loss"].append(loss.item())
+  loss.backward()
+  # Let's update the weights
+  with torch.no_grad():
+    hist["a"].append(a.item())
+    a -= a.grad * pas
+    # Set the gradients to zero
+    a.grad.zero_()
+    print(f"Epoch {i}/{epochs}: Loss: {loss} a: {a[0]}")
+plot_hist(hist, epochs)
