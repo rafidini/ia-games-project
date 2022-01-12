@@ -1,3 +1,4 @@
+# Ex 7 Appr formes V1
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -10,7 +11,7 @@ import torch.nn.functional as FNT
 
 # (x,y, category)
 points = [ [(0.5,0.4),0],
-        [(0.8,0.3),0],
+           [(0.8,0.3),0],
 		    [(0.3,0.8),0],
 		    [(-.4,0.3),1],
 		    [(-.3,0.7),1],
@@ -66,14 +67,14 @@ XXXX , YYYY = np.meshgrid(np.arange(-1, 1, 0.01), np.arange(-1, 1, 0.01))
 class Net(nn.Module) :
   def __init__(self):
     super().__init__()
-    self.couche1 = torch.nn.Linear(2, 3)
+    self.couche1 = nn.Linear(2, 3)
 
-  def forward(self,x):
+  def forward(self, x):
     x = self.couche1(x)
-    x = FNT.relu(x)
+    #x = FNT.relu(x)
     return x
 
-def loss_fct(Y_preds,Y_true, delta = 0):
+def loss_fct(Y_preds,Y_true, delta = 2):
   err = Y_preds - (Y_true - delta)
   err[err < 0] = 0
   return torch.sum(err)
@@ -89,36 +90,36 @@ def plot_hist(hist):
 
 def ComputeCatPerPixel():
     s = XXXX.shape
+    T = torch.zeros((s[0],s[1],2))
+    T[:,:,0],T[:,:,1] = torch.FloatTensor(XXXX), torch.FloatTensor(YYYY)
     preds = model(T)
     preds = torch.argmax(preds, axis= 2)
     CCCC = preds.detach().numpy()
     return CCCC
 
-T = torch.zeros((XXXX.shape[0],XXXX.shape[0],2))
-T[:,:,0],T[:,:,1] = torch.FloatTensor(XXXX), torch.FloatTensor(YYYY)
-
 model = Net()
-iteration = 750
-size = int(np.sqrt(len(points)))
+iteration = 500
+size = len(points)
 hist = {"loss":[],"epochs":[]}
-optim = optim.SGD(model.parameters(), lr=0.001)
-X = torch.zeros((size,size,2))
-X[:,:,0] = torch.FloatTensor([elt[0][0] for elt in points]).reshape(size,size)
-X[:,:,1] = torch.FloatTensor([elt[0][1] for elt in points]).reshape(size,size)
-Y = torch.Tensor([elt[1] for elt in points]).reshape(size,size)
+optim = optim.SGD(model.parameters(), lr=1e-3)
+X = torch.zeros((size,1,2))
+X[:,:,0] = torch.FloatTensor([elt[0][0] for elt in points]).reshape(size,1)
+X[:,:,1] = torch.FloatTensor([elt[0][1] for elt in points]).reshape(size,1)
+Y = torch.FloatTensor([[1 if i==elt[1] else 0 for i in range(3)] for elt in points]).reshape(size,1,3)
 
 for i in range(iteration):
   optim.zero_grad() # remet à zéro le calcul du gradient
   preds = model(X) # démarrage de la passe Forward
-  loss = loss_fct(preds, Y) # choisit une function de loss de PyTorch
+  loss = loss_fct(preds, Y)
   hist['loss'].append(loss.item())
   hist['epochs'].append(i)
-  #print(f"Iteration : {i}  ErrorTot : {hist['loss'][-1]}")
   loss.backward() # effectue la rétropropagation
   optim.step() # algorithme de descente
-  DessineFond()
-  DessinePoints()
-  plt.title(f"Iteration: {i}/{iteration}")
-  #plt.pause(1)  # pause avec duree en secondes
-  plt.show(block=False)
+  if (i+1)%100==0:
+    #print(f"Iteration : {i}  ErrorTot : {hist['loss'][-1]}")
+    DessineFond()
+    DessinePoints()
+    plt.title(f"Iteration: {i+1}/{iteration}")
+    #plt.pause(2)  # pause avec duree en secondes
+    plt.show(block=False)
 plot_hist(hist)
