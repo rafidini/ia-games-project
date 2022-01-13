@@ -45,7 +45,7 @@ XXXX , YYYY = np.meshgrid(np.arange(-1, 1, 0.01), np.arange(-1, 1, 0.01))
 class Net(nn.Module) :
   def __init__(self):
     super().__init__()
-    neurones = 30
+    neurones = 50
     self.couche1 = torch.nn.Linear(2, neurones)
     self.couche2 = torch.nn.Linear(neurones, 3)
 
@@ -55,9 +55,10 @@ class Net(nn.Module) :
     x = self.couche2(x)
     return x
 
-def loss_fct(Y_preds,Y_true, delta = 2):
+def loss_fct(Y_preds,Y_true, delta = 0):
   err = Y_preds - (Y_true - delta)
-  err[err < 0] = 0
+  err = torch.abs(err)
+  #err[err < 0] = 0
   return torch.sum(err)
 
 def plot_hist(hist):
@@ -79,17 +80,16 @@ def ComputeCatPerPixel():
 T = torch.zeros((XXXX.shape[0],XXXX.shape[0],2))
 T[:,:,0],T[:,:,1] = torch.FloatTensor(XXXX), torch.FloatTensor(YYYY)
 model = Net()
-iteration = 50
+iteration = 1000
 size = len(points)
 hist = {"loss":[],"epochs":[]}
-optim = optim.SGD(model.parameters(), lr=0.001)
+optim = optim.SGD(model.parameters(), lr=0.0005)
 X = torch.zeros((size, 1, 2))
 X[:,:,0] = torch.FloatTensor([elt[0][0] for elt in points]).reshape(size, 1)
 X[:,:,1] = torch.FloatTensor([elt[0][1] for elt in points]).reshape(size, 1)
-print({elt[1] for elt in points})
 Y = torch.FloatTensor([[1 if i == elt[1] else 0 for i in range(3)] for elt in points]).reshape(size, 1, 3)
 #Y = torch.Tensor([elt[1] for elt in points]).reshape(size,size)
-exit()
+
 for i in range(iteration):
   optim.zero_grad() # remet à zéro le calcul du gradient
   preds = model(X) # démarrage de la passe Forward
@@ -98,7 +98,7 @@ for i in range(iteration):
   hist['epochs'].append(i)
   loss.backward() # effectue la rétropropagation
   optim.step() # algorithme de descente
-  if i%2==0:
+  if i%25==0:
      print(f"Iteration : {i}  ErrorTot : {hist['loss'][-1]}")
      DessineFond()
      DessinePoints()

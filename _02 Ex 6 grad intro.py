@@ -30,9 +30,9 @@ import numpy as np
 # Pour forcer les tenseurs à utiliser des nombres flotants,
 # nous utilisons la syntaxe suivante :
 
-x = torch.FloatTensor([ 4,  6,  1 , 3 ])
-y = torch.FloatTensor([ 2,  -3,  1 , 3 ])
-true = torch.FloatTensor([1, 1, 0, 0])
+x = torch.FloatTensor([ 4,  6,  1 , 3 , 5])
+y = torch.FloatTensor([ 2,  -3,  1 , 3 , 5.1])
+true = torch.FloatTensor([1, 1, 0, 0, 1])
 
 # pour créer notre paramètre d'apprentissage et préciser que pytorch
 # devra gérer son calcul de gradient, nous écrivons :
@@ -67,14 +67,15 @@ a.requires_grad = True
 
 
 # A chaque itération, affichez la valeur de a et de l'erreur totale
-epochs = 25
-pas = 1e-2
+epochs = 1000
+pas = 1e-1
 hist = {"loss":[],"a":[],"epochs":[]}
 
 def model(x, y, a):
   preds = torch.ones((x.shape[0],2))
   preds[:,0] = a * torch.abs(x-y)
   preds = torch.min(preds, 1).values
+  print('preds:', preds)
   return preds
 
 def error(preds,true):
@@ -97,8 +98,6 @@ for i in range(epochs):
 
   # Get the loss and perform backpropagation
   loss = error(preds, true)
-  print('-'* 10)
-  print(preds, true)
   
   hist["loss"].append(loss.item())
   loss.backward()
