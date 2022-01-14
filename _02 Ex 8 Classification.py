@@ -5,46 +5,94 @@ from   torchvision import datasets, transforms
 
 ####  1 couche Linear
 #	Qu1 : quel est le % de bonnes prédictions obtenu au lancement du programme , pourquoi ?
+#       L'initialisation alétoire des paramètres du réseau permet de bien prédire certaines données (88.97% de réussite)
+
 #	Qu2 : quel est le % de bonnes prédictions obtenu avec 1 couche Linear ?
+#       Le % de bonnes prédictions vaut 90.36% en fin d'entrainement.
+
 #	Qu3 : pourquoi le test_loader n’est pas découpé en batch ?
-#   Qu4 : pourquoi la couche Linear comporte-t-elle 784 entrées ?
-#   Qu5 : pourquoi la couche Linear comporte-t-elle 10 sorties ?
+#       Le test_loader est utilisé uniquement pour évaluer les performances du réseau après l'entrainement. 
+#       Le découpage en batch est utile uniquement pour faciliter la mise à jour du gradient qui à lieu uniquement lors de l'entrainement. 
+
+# Qu4 : pourquoi la couche Linear comporte-t-elle 784 entrées ?
+#       C'est la taille de chaque échantillon d'entrée.
+
+# Qu5 : pourquoi la couche Linear comporte-t-elle 10 sorties ?
+#       C'est le nombre de classes (chiffres de 0 à 9) possibles en sortie. 
 
 ####  2 couches Linear
 #   Qu6 : quelles sont les tailles des deux couches Linear ?
+#         La couche 1 est de taille (784,128) et la couche 2 de taille (128,10).
+
 # 	Qu7 : quel est l’ordre de grandeur du nombre de poids utilisés dans ce réseau ?
+#         ?? 784 * 128 = 100 352 ~ 1e5 poids
+
 #	Qu8 : quel est le % de bonnes prédictions obtenu avec 2 couches Linear ?
+#         Le % de bonnes prédictions vaut 97.60% en fin d'entrainement.
 
 ####  3 couches Linear
 #   Qu9 : obtient-on un réel gain sur la qualité des prédictions ?
+#         Le % de bonnes prédictions vaut 97.35% en fin d'entrainement dont non.
 
 ####  Fonction Softmax
 #   Qu10 : pourquoi est il inutile de changer le code de la fonction TestOK ?
-
-
+#          Le nombre de classes est toujourst fixé à 10 quel que soit l'architecture
+#          du réseau utilisé.
 
 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.FC1 = nn.Linear(784, 10)
+        # # Q1-5
+        # self.FC1 = nn.Linear(784, 10)
+
+        # # Q6-8
+        # self.FC1 = nn.Linear(784, 128)
+        # self.FC2 = nn.Linear(128, 10)
+
+        # # Q9
+        self.FC1 = nn.Linear(784, 128)
+        self.FC2 = nn.Linear(128, 64)
+        self.FC3 = nn.Linear(64, 10)
 
     def forward(self, x):
         n = x.shape[0]
-        x = x.reshape((n,784))
-        output = self.FC1(x)
+        x = x.reshape((n, 784))
+
+        x = self.FC1(x)
+        x = F.relu(x)
+
+        x = self.FC2(x)
+        x = F.relu(x)
+
+        #output = self.FC3(x)
+        output = nn.Softmax(dim=1)(x)
         return output
 
 
-    def Loss(self,Scores,target):
-        nb = Scores.shape[0]
-        TRange = torch.arange(0,nb,dtype=torch.int64)
-        scores_cat_ideale = Scores[TRange,target]
-        scores_cat_ideale = scores_cat_ideale.reshape(nb,1)
-        delta = 1
-        Scores = Scores + delta - scores_cat_ideale
-        x = F.relu(Scores)
-        err = torch.sum(x)
+    def Loss(self, Scores, target):
+        # Scores : (64, 10)
+        # target : (64)
+
+        # Original 
+        # nb = Scores.shape[0]
+        # TRange = torch.arange(0, nb, dtype=torch.int64)
+        # scores_cat_ideale = Scores[TRange,target]
+        # scores_cat_ideale = scores_cat_ideale.reshape(nb,1)
+        # delta = 1
+        # Scores = Scores + delta - scores_cat_ideale
+        # x = F.relu(Scores)
+        # err = torch.sum(x)
+
+        n_sample, n_classes = Scores.shape
+        TargetScores = torch.zeros(n_sample, n_classes)
+
+        for i in range(n_sample):
+            TargetScores[i, target[i].item()] = 1
+        
+        cross_entropy = nn.CrossEntropyLoss()
+        err = cross_entropy(Scores, TargetScores)
+
         return err
 
 
@@ -109,4 +157,4 @@ def main(batch_size):
         TEST(model,  test_loader)
 
 
-main(batch_size = 64)
+main(batch_size=64)
