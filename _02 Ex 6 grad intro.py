@@ -32,7 +32,7 @@ import numpy as np
 
 x = torch.FloatTensor([ 4,  6,  1 , 3 ])
 y = torch.FloatTensor([ 2,  -3,  1 , 3 ])
-true = torch.FloatTensor([0, 0, 1, 1])
+true = torch.FloatTensor([1, 1, 0, 0])
 
 # pour créer notre paramètre d'apprentissage et préciser que pytorch
 # devra gérer son calcul de gradient, nous écrivons :
@@ -68,7 +68,7 @@ a.requires_grad = True
 
 # A chaque itération, affichez la valeur de a et de l'erreur totale
 epochs = 50
-pas = 4e-4
+pas = 1e-2
 hist = {"loss":[],"a":[],"epochs":[]}
 
 def model(x,y):

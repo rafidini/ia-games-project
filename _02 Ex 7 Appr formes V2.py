@@ -45,8 +45,8 @@ XXXX , YYYY = np.meshgrid(np.arange(-1, 1, 0.01), np.arange(-1, 1, 0.01))
 class Net(nn.Module) :
   def __init__(self):
     super().__init__()
-    self.couche1 = torch.nn.Linear(2, 3)
-    self.couche2 = torch.nn.Linear(3, 3)
+    self.couche1 = torch.nn.Linear(2, 30)
+    self.couche2 = torch.nn.Linear(30, 3)
 
   def forward(self,x):
     x = self.couche1(x)
@@ -54,8 +54,9 @@ class Net(nn.Module) :
     x = self.couche2(x)
     return x
 
-def loss_fct(Y_preds,Y_true, delta = 0):
+def loss_fct(Y_preds,Y_true, delta = 2):
   err = Y_preds - (Y_true - delta)
+  err = torch.abs(err)
   err[err < 0] = 0
   return torch.sum(err)
 
@@ -79,14 +80,13 @@ T = torch.zeros((XXXX.shape[0],XXXX.shape[0],2))
 T[:,:,0],T[:,:,1] = torch.FloatTensor(XXXX), torch.FloatTensor(YYYY)
 
 model = Net()
-iteration = 500
-size = int(np.sqrt(len(points)))
+iteration = 2000
 hist = {"loss":[],"epochs":[]}
-optim = optim.SGD(model.parameters(), lr=0.001)
-X = torch.zeros((size,size,2))
-X[:,:,0] = torch.FloatTensor([elt[0][0] for elt in points]).reshape(size,size)
-X[:,:,1] = torch.FloatTensor([elt[0][1] for elt in points]).reshape(size,size)
-Y = torch.Tensor([elt[1] for elt in points]).reshape(size,size)
+optim = optim.SGD(model.parameters(), lr=4e-4)
+X = torch.zeros((len(points),1,2))
+X[:,:,0] = torch.FloatTensor([elt[0][0] for elt in points]).reshape(len(points),1)
+X[:,:,1] = torch.FloatTensor([elt[0][1] for elt in points]).reshape(len(points),1)
+Y = torch.FloatTensor([[1 if i==elt[1] else 0 for i in range(3)] for elt in points]).reshape(len(points),1,3)
 
 for i in range(iteration):
   optim.zero_grad() # remet à zéro le calcul du gradient
@@ -96,7 +96,7 @@ for i in range(iteration):
   hist['epochs'].append(i)
   loss.backward() # effectue la rétropropagation
   optim.step() # algorithme de descente
-  if i%20==0:
+  if i%100==0:
      #print(f"Iteration : {i}  ErrorTot : {hist['loss'][-1]}")
      DessineFond()
      DessinePoints()
@@ -104,7 +104,3 @@ for i in range(iteration):
      #plt.pause(2)  # pause avec duree en secondes
      plt.show(block=False)
 plot_hist(hist)
-
-
-
-

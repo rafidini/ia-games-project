@@ -7,17 +7,49 @@ from   torchvision import datasets, transforms
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.FC1 = nn.Linear(3*32*32, 128)
-        self.FC2 = nn.Linear(128,10)
+        ## Original
+        #self.FC1 = nn.Linear(3*32*32, 128)
+        #self.FC2 = nn.Linear(128,10)
+
+        ## Net 1
+        #self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size = (3,3))
+        #self.FC2 = nn.Linear(32*30*30, 10)
+
+        ## Net 2
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size = (3,3))
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size = (3,3))
+        self.FC3 = nn.Linear(64*28*28, 10)
+
         self.criterion = nn.CrossEntropyLoss()
 
-
     def forward(self, x):
-        n = x.shape[0]
-        x = x.reshape((n,3*32*32))
-        x = self.FC1(x)
+        ## Original
+        #n = x.shape[0]
+        #x = x.reshape((n,3*32*32))
+        #x = self.FC1(x)
+        #x = F.relu(x)
+        #x = self.FC2(x)
+
+        ## Net1
+        #print(f'Input_shape: {x.shape}')
+        #x = self.conv1(x)
+        #x = F.relu(x)
+        #print(f'conv1_shape: {x.shape}')
+        #x = torch.flatten(x, 1)
+        #x = self.FC3(x)
+        #print(f'Output_shape: {x.shape}')
+
+        ## Net 2
+        #print(f'Input_shape: {x.shape}')
+        x = self.conv1(x)
         x = F.relu(x)
-        x = self.FC2(x)
+        #print(f'conv1_shape: {x.shape}')
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = torch.flatten(x, 1)
+        #print(f'conv2_shape: {x.shape}')
+        x = self.FC3(x)
+        #print(f'Output_shape: {x.shape}')
         return x
 
 
